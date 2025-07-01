@@ -1,50 +1,40 @@
 <?php
 
-use App\Http\Controllers\CategoryItemController;
-use App\Http\Controllers\ChatController;
-use App\Http\Controllers\CreateCategoryController;
-use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\GetNotificationController;
-use Illuminate\Foundation\Auth\EmailVerificationRequest;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
+use App\Livewire\Pages\Dashboard;
+use App\Livewire\Pages\Orders;
+use App\Livewire\Pages\Products;
+use App\Livewire\Pages\Suppliers;
+use App\Livewire\Pages\Users;
 
-//? CREATING THE DEFAULT CATEGORIES VALUES  -------------
 
-Route::middleware(['user', 'prevent-back', 'change-pass'])->group(function () {
-    Route::post('/create_categories', CreateCategoryController::class)->name('categories.create');
-    Route::get('/get-notifications', GetNotificationController::class);
-    Route::get('/item-category/{id}', [CategoryItemController::class, 'index']);
-    Route::get('/legal-information', fn () => Inertia::render('LegalInformation/LegalInformation'));
-    Route::post('/messages/mark-as-read', [ChatController::class, 'markAsRead']);
-    Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+/*
+|--------------------------------------------------------------------------
+| Web Routes
+|--------------------------------------------------------------------------
+|
+| Here is where you can register web routes for your application. These
+| routes are loaded by the RouteServiceProvider and all of them will
+| be assigned to the "web" middleware group. Make something great!
+|
+*/
+
+Route::view('profile', 'profile')
+    ->middleware(['auth', 'verified'])
+    ->name('profile');
+
+Route::middleware(['auth', 'verified',  ])->group(function() {
+    Route::get('/dashboard', Dashboard::class)->name('dashboard');
+    Route::get('/products', Products::class)->name('products');
+    Route::get('/orders', Orders::class)->name('orders');
+    Route::get('/users', Users::class)->name('users')->middleware('admin');
+    Route::get('/suppliers', Suppliers::class)->name('suppliers')->middleware('admin');
+    
 });
 
-// Dashboard route for both guests and authenticated users
 
-// Authenticated dashboard route with verified middleware
-Route::middleware(['auth', 'prevent-back', 'change-pass', 'verified'])->group(function () {
-    Route::get('/dashboard', [DashboardController::class, 'index'])->name('authenticated.dashboard');
-});
+Route::get('/order-confirmed', function(){
+    return view('emails.email-confirmation');
+})->name('order-confirmed');
 
-//? EMAIL VERIFICATION ==================================================
-// Route::middleware('auth')->group(function () {
-//     Route::get('/email/verify', fn() => view('auth.verify-email'))->name('verification.notice');
-
-//     Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $request) {
-//         $request->fulfill();
-//         $request->user()->sendEmailVerificationNotification();
-//         return redirect('/home');
-//     })->middleware('signed')->name('verification.verify');
-
-//     Route::post('/email/verification-notification', function (Request $request) {
-//         $request->user()->sendEmailVerificationNotification();
-//         return back()->with('message', 'Verification link sent!');
-//     })->middleware('throttle:6,1')->name('verification.send');
-// });
-
-Route::get('/post/items', function (Request $request) {
-    return app(DashboardController::class)->getItems($request->query('count', 4));
-});
+require __DIR__.'/auth.php';

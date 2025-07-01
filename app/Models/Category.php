@@ -9,14 +9,11 @@ class Category extends Model
 {
     use HasFactory;
 
-    protected $fillable = [
-        'category',
-        'description',
-        'category_image',
-    ];
+    protected $guarded = ['id'];
 
-    public function items()
+    public function suppliers()
     {
-        return $this->hasMany(Item::class);
+        return $this->belongsToMany(Supplier::class);
     }
+
 }
